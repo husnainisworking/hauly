@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Request;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
@@ -9,13 +10,21 @@ use Illuminate\Support\Facades\Session;
 
 class CartService
 {
+    public function __construct(public ?Request $request = null) {
+
+    }
+
     protected function getIdentifier(): array
     {
         if (Auth::check()) {
             return ['user_id' => Auth::id()];
         }
 
-        return ['session_id' => Session::getId()];
+        $sessionId = $this->request
+            ? $this->request->session()->getId()
+            : Session::getId();
+
+        return ['session_id' => $sessionId];
     }
 
     public function getItems()
@@ -82,7 +91,11 @@ class CartService
     {
         if (!Auth::check()) return;
 
-        $sessionItems = CartItem::where('session_id', Session::getId())->get();
+        $sessionId = $this->request
+            ? $this->request->session()->getId()
+            : Session::getId();
+
+        $sessionItems = CartItem::where('session_id', $sessionId)->get();
 
         foreach ($sessionItems as $item) {
             $existing = CartItem::where('user_id', Auth::id())
