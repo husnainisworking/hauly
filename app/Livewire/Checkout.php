@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\CartService;
 use Illuminate\Support\Facades\Auth;
+
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 
@@ -60,6 +62,7 @@ class Checkout extends Component
 
     public function placeOrder(): void
     {
+
         $this->validate();
         $this->processing = true;
 
@@ -75,6 +78,8 @@ class Checkout extends Component
         $subtotal = $cart->getTotal();
         $tax = round($subtotal * 0.08, 2);
         $total = $subtotal + $tax;
+
+        $order = DB::transaction(function () use ($items, $subtotal, $tax, $total, $cart) {
 
         $order = Order::create([
             'order_number'     => Order::generateOrderNumber(),
@@ -115,6 +120,9 @@ class Checkout extends Component
         }
 
         $cart->clear();
+        return $order;
+        });
+
         $this->processing = false;
         $this->dispatch('cart-updated');
         $this->redirect(route('orders.confirmation', $order->order_number));
