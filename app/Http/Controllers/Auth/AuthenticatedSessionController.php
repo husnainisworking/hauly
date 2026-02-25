@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
         app(CartService::class)->mergeSessionCart();
 
         $user = $request->user();
-        $destination = $user->isAdmin() ? route('admin.dashboard', absolute: false) : route('home', absolute: false);
+        $destination = $user->isAdmin() ? '/admin' : route('home', absolute: false);
 
         return redirect()->intended($destination);
     }
